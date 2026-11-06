@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Topic 6.1: MIDI 1.0 vs MIDI 2.0 — Comparative Workbench</title>
+  <style>
+    :root {
+      --coursera-blue: #0056D2;
+      --coursera-blue-focus: #00419E;
+      --text-dark: #1F1F1F;
+      --bg-light: #F8F9FA;
+      --card-bg: #FFFFFF;
+      --border-color: #D1D5DB;
+      --focus-outline: #FFB800;
+      --highlight-bg: #EBF3FF;
+      --accent-red: #DC2626;
+      --accent-green: #16A34A;
+      --mod-color: #7C3AED;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+    }
+
+    .interactive-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      max-width: 780px;
+      width: 100%;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      color: var(--text-dark);
+    }
+
+    p.lead-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    /* Protocol Toggles */
+    .protocol-toggles {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn-protocol {
+      flex: 1;
+      background-color: #F3F4F6;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #4B5563;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-protocol:focus {
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+    }
+
+    .btn-protocol[aria-pressed="true"] {
+      background-color: var(--highlight-bg);
+      border-color: var(--coursera-blue);
+      color: var(--coursera-blue);
+    }
+
+    /* Workbench Area */
+    .workbench-area {
+      background-color: #F9FAFB;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* 1. Patch Change Panel */
+    .test-panel {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .panel-header {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .lcd-screen {
+      background-color: #1F2937;
+      color: #34D399;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 12px;
+      min-height: 24px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .lcd-screen.error {
+      color: #F87171;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-action {
+      flex: 1;
+      min-width: 140px;
+      background-color: #F3F4F6;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-dark);
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:focus {
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+    }
+
+    .btn-action:hover {
+      background-color: #E5E7EB;
+    }
+
+    /* 2. Resolution Slider Panel */
+    .slider-container {
+      margin-top: 8px;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #6B7280;
+      margin-bottom: 8px;
+    }
+
+    .slider-value {
+      color: var(--coursera-blue);
+      font-size: 0.9rem;
+    }
+
+    /* Custom range input styling */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      margin-bottom: 12px;
+    }
+
+    input[type=range]:focus {
+      outline: 3px solid var(--focus-outline);
+      outline-offset: 2px;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 8px;
+      cursor: pointer;
+      background: #D1D5DB;
+      border-radius: 4px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: var(--coursera-blue);
+      cursor: pointer;
+      -webkit-appearance: none;
+      margin-top: -6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* Info Status Card */
+    .info-card {
+      background-color: var(--highlight-bg);
+      border-left: 4px solid var(--coursera-blue);
+      padding: 16px;
+      border-radius: 0 6px 6px 0;
+      line-height: 1.5;
+    }
+
+    .info-card h3 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+
+    .info-card p {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+
+    .info-card .analogy-box {
+      margin-top: 8px;
+      font-size: 0.88rem;
+      color: #374151;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #4B5563;
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="interactive-card" role="region" aria-labelledby="workbench-title">
+    <h2 id="workbench-title">Topic 6.1: MIDI 1.0 vs MIDI 2.0 — Comparative Workbench</h2>
+    <p class="lead-text">
+      Explore the structural differences between the two protocols. Test how each handles patch recall (the "Latched Bank Error"), controller resolution (7-bit vs 32-bit), and bidirectional communication (Property Exchange).
+    </p>
+
+    <!-- Protocol Selector -->
+    <div class="protocol-toggles" role="group" aria-label="Select MIDI Protocol">
+      <button class="btn-protocol" id="btn-midi1" aria-pressed="true" aria-controls="workbench-panel">
+        MIDI 1.0 (Sequential, 7-Bit)
+      </button>
+      <button class="btn-protocol" id="btn-midi2" aria-pressed="false" aria-controls="workbench-panel">
+        MIDI 2.0 (Unified, 32-Bit)
+      </button>
+    </div>
+
+    <!-- Comparative Workbench Area -->
+    <div class="workbench-area" id="workbench-panel">
+
+      <!-- Test 1: Patch Recall & Property Exchange -->
+      <div class="test-panel">
+        <div class="panel-header">
+          <span>Test 1: Patch Recall &amp; Communication</span>
+          <span id="test1-status" style="color: #6B7280; font-size: 0.75rem; text-transform: uppercase;">Awaiting Input</span>
+        </div>
+        
+        <!-- Synth LCD Display -->
+        <div class="lcd-screen" id="synth-lcd" aria-live="polite">
+          [ SYNTH IDLE ]
+        </div>
+
+        <div class="action-row" id="actions-midi1">
+          <button class="btn-action" id="act-m1-full">Send [CC0] + [CC32] + [PC47]</button>
+          <button class="btn-action" id="act-m1-error">Send [PC47] only (Skip Bank)</button>
+        </div>
+        <div class="action-row" id="actions-midi2" style="display: none;">
+          <button class="btn-action" id="act-m2-unified">Send [Bank+PC47] (Bank Valid flag)</button>
+          <button class="btn-action" id="act-m2-query">Query Property Exchange (Get Names)</button>
+        </div>
+      </div>
+
+      <!-- Test 2: Resolution (Zipper Noise vs Smooth) -->
+      <div class="test-panel">
+        <div class="panel-header">
+          <span>Test 2: Controller Resolution (Filter Cutoff)</span>
+          <span class="slider-value" id="res-val-display">Value: 0 / 127</span>
+        </div>
+        
+        <div class="slider-container">
+          <div class="slider-labels">
+            <span>Closed</span>
+            <span id="res-label">7-bit Resolution (128 steps)</span>
+            <span>Open</span>
+          </div>
+          <input type="range" id="filter-slider" min="0" max="127" value="0" aria-label="Filter Cutoff Control">
+        </div>
+        <div style="font-size: 0.8rem; color: #4B5563; text-align: center; margin-top: 8px;" id="res-desc">
+          Move slider slowly. At 7-bits, the jumps cause audible "zipper noise."
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Accessible Info Card -->
+    <div id="status-panel" class="info-card" role="status" aria-live="polite">
+      <h3 id="panel-title">Protocol Active: MIDI 1.0 (Sequential Architecture)</h3>
+      <p id="panel-desc">
+        Bank Select does nothing on its own. It saves a number, used when the next Program Change arrives. If you send the Program Change alone, the synth uses whatever bank it used last (the Latched Bank Error). Controllers are limited to 7 bits (128 steps), causing stair-step jumps.
+      </p>
+      <div class="analogy-box" id="panel-analogy">
+        <strong>Analogy: a postal address.</strong> Bank Select is the street. Program Change is the house number. If you send only the house number, the letter goes to whichever street you used last.
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <strong>Core concept:</strong> MIDI 1.0 is blind and sequential; it agrees on numbers, but not on what they mean. MIDI 2.0 fixes the architecture: messages are unified (no latched state errors), resolution is continuous (up to 32 bits), and communication is bidirectional (devices tell the DAW their patch names).
+    </div>
+  </main>
+
+  <script>
+    // Protocol State
+    let isMIDI2 = false;
+    
+    // UI Elements
+    const btnMidi1 = document.getElementById('btn-midi1');
+    const btnMidi2 = document.getElementById('btn-midi2');
+    
+    const actionsMidi1 = document.getElementById('actions-midi1');
+    const actionsMidi2 = document.getElementById('actions-midi2');
+    const synthLcd = document.getElementById('synth-lcd');
+    const test1Status = document.getElementById('test1-status');
+    
+    const actM1Full = document.getElementById('act-m1-full');
+    const actM1Error = document.getElementById('act-m1-error');
+    const actM2Unified = document.getElementById('act-m2-unified');
+    const actM2Query = document.getElementById('act-m2-query');
+    
+    const filterSlider = document.getElementById('filter-slider');
+    const resValDisplay = document.getElementById('res-val-display');
+    const resLabel = document.getElementById('res-label');
+    const resDesc = document.getElementById('res-desc');
+    
+    const panelTitle = document.getElementById('panel-title');
+    const panelDesc = document.getElementById('panel-desc');
+    const panelAnalogy = document.getElementById('panel-analogy');
+    
+    // Audio Context (Initialize on first interaction)
+    let audioCtx = null;
+    let osc = null;
+    let filter = null;
+    let masterGain = null;
+    let isPlaying = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        osc = audioCtx.createOscillator();
+        filter = audioCtx.createBiquadFilter();
+        masterGain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110.0, audioCtx.currentTime); // A2 (bass tone to hear filter)
+
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(8.0, audioCtx.currentTime); // High resonance to emphasize zipper noise
+        filter.frequency.setValueAtTime(100, audioCtx.currentTime);
+
+        masterGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+
+        osc.connect(filter);
+        filter.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+        osc.start();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function startSound() {
+      initAudio();
+      masterGain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05);
+      isPlaying = true;
+    }
+
+    function stopSound() {
+      if (masterGain && isPlaying) {
+        masterGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        isPlaying = false;
+      }
+    }
+
+    // Switch Protocol View
+    function setProtocol(midi2Active) {
+      isMIDI2 = midi2Active;
+      btnMidi1.setAttribute('aria-pressed', !isMIDI2);
+      btnMidi2.setAttribute('aria-pressed', isMIDI2);
+
+      // Reset Test 1
+      synthLcd.textContent = "[ SYNTH IDLE ]";
+      synthLcd.className = 'lcd-screen';
+      test1Status.textContent = "Awaiting Input";
+      
+      // Swap Actions
+      actionsMidi1.style.display = isMIDI2 ? 'none' : 'flex';
+      actionsMidi2.style.display = isMIDI2 ? 'flex' : 'none';
+
+      // Update Test 2 Slider Properties
+      if (isMIDI2) {
+        // Simulate high resolution (32-bit mapped down to a 16-bit smooth UI range for DOM performance)
+        filterSlider.max = 65535; 
+        filterSlider.value = 0;
+        resLabel.textContent = "Expanded Resolution (Continuous)";
+        resValDisplay.textContent = "Value: 0 / 65535 (16-bit UI map)";
+        resDesc.textContent = "Move slider. The expanded resolution (scaled here to 65,535 steps for browser performance) provides a continuous, analog-like sweep with no audible stepping.";
+        
+        panelTitle.textContent = "Protocol Active: MIDI 2.0 (Unified & Bidirectional)";
+        panelDesc.textContent = "One message carries the program and bank together with a Bank Valid flag. There is no latched bank to remember. Controllers use vastly expanded resolution to eliminate stair-stepping. Devices talk back to the DAW via Property Exchange.";
+        panelAnalogy.innerHTML = "<strong>Result:</strong> No zip noise, no wrong patches, and no blind numbers. The DAW knows exactly what the synth is doing.";
+      } else {
+        // 7-bit resolution (0-127)
+        filterSlider.max = 127;
+        filterSlider.value = 0;
+        resLabel.textContent = "7-bit Resolution (128 steps)";
+        resValDisplay.textContent = "Value: 0 / 127";
+        resDesc.textContent = "Move slider slowly. At 7-bits, the jumps cause audible 'zipper noise' on resonant sweeps.";
+        
+        panelTitle.textContent = "Protocol Active: MIDI 1.0 (Sequential Architecture)";
+        panelDesc.textContent = "Bank Select does nothing on its own. It saves a number, used when the next Program Change arrives. If you send the Program Change alone, the synth uses whatever bank it used last (Latched Bank Error). Controllers are limited to 7 bits (128 steps).";
+        panelAnalogy.innerHTML = "<strong>Analogy: a postal address.</strong> Bank Select is the street. Program Change is the house number. If you send only the house number, the letter goes to whichever street you used last.";
+      }
+      
+      // Reset Audio Filter
+      if (filter) filter.frequency.setValueAtTime(100, audioCtx.currentTime);
+    }
+
+    btnMidi1.addEventListener('click', () => setProtocol(false));
+    btnMidi2.addEventListener('click', () => setProtocol(true));
+
+    // Test 1: Patch Recall Actions
+    actM1Full.addEventListener('click', () => {
+      synthLcd.className = 'lcd-screen';
+      synthLcd.innerHTML = "BANK: 2 <br> PRG: 47 (Selected)";
+      test1Status.textContent = "Success: Correct Sequence";
+    });
+
+    actM1Error.addEventListener('click', () => {
+      synthLcd.className = 'lcd-screen error';
+      synthLcd.innerHTML = "BANK: [Old Latched Data] <br> PRG: 47 (WRONG SOUND!)";
+      test1Status.textContent = "Error: Latched Bank / Missing Street Name";
+    });
+
+    actM2Unified.addEventListener('click', () => {
+      synthLcd.className = 'lcd-screen';
+      synthLcd.innerHTML = "PACKET RX: Bank Valid=1 <br> PRG: 47 (Selected)";
+      test1Status.textContent = "Success: Unified Packet";
+    });
+
+    actM2Query.addEventListener('click', () => {
+      synthLcd.className = 'lcd-screen';
+      synthLcd.innerHTML = "PROPERTY EXCHANGE: <br> DAW reads: 'Warm Rhodes'";
+      test1Status.textContent = "Success: Bidirectional Communication";
+    });
+
+    // Test 2: Filter Slider Audio Mapping
+    filterSlider.addEventListener('mousedown', startSound);
+    filterSlider.addEventListener('touchstart', startSound);
+    
+    // Global listeners prevent stuck notes if user releases mouse outside the slider
+    window.addEventListener('mouseup', stopSound);
+    window.addEventListener('touchend', stopSound);
+
+    filterSlider.addEventListener('input', (e) => {
+      const val = e.target.value;
+      const max = e.target.max;
+      
+      if (isMIDI2) {
+        resValDisplay.textContent = `Value: ${val} / ${max} (16-bit UI map)`;
+      } else {
+        resValDisplay.textContent = `Value: ${val} / ${max}`;
+      }
+      
+      if (filter && audioCtx) {
+        // Map slider (0-1) to an exponential frequency curve (100 Hz to 6000 Hz)
+        const normalized = val / max;
+        const minFreq = 100;
+        const maxFreq = 6000;
+        const targetFreq = minFreq * Math.pow(maxFreq / minFreq, normalized);
+        
+        if (isMIDI2) {
+          // Smooth continuous ramping (Analog feel)
+          filter.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.02);
+        } else {
+          // 7-bit harsh stepping (Zipper noise simulation)
+          // Set value instantly on exactly 128 discrete steps
+          filter.frequency.setValueAtTime(targetFreq, audioCtx.currentTime);
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
